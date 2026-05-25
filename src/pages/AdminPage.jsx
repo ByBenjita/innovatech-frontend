@@ -9,7 +9,7 @@ const CATEGORIAS = ['hamburguesas', 'pizzas', 'ensaladas', 'bebidas', 'postres']
 const EMPTY_FORM  = { nombre: '', precio: '', descripcion: '', categoria: 'hamburguesas', stock: '100' };
 
 // ── Login ────────────────────────────────────────────────────────────────────
-function LoginForm() {
+function LoginForm({ onNavigate }) {
   const { login } = useAuth();
   const [form, setForm]   = useState({ username: '', password: '' });
   const [error, setError] = useState('');
@@ -19,12 +19,18 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const data = await apiLogin(form.username, form.password);
-    setLoading(false);
-    if (data.token) {
-      login(data.token);
-    } else {
-      setError(data.error || 'Credenciales inválidas');
+    try {
+      const data = await apiLogin(form.username, form.password);
+      if (data.token) {
+        login(data.token);
+        onNavigate('adminpanel');
+      } else {
+        setError(data.error || 'Credenciales inválidas');
+      }
+    } catch {
+      setError('No se pudo conectar con el servidor');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -268,5 +274,5 @@ function Dashboard({ onNavigate }) {
 // ── Export ────────────────────────────────────────────────────────────────────
 export default function AdminPage({ onNavigate }) {
   const { isAdmin } = useAuth();
-  return isAdmin ? <Dashboard onNavigate={onNavigate} /> : <LoginForm />;
+  return isAdmin ? <Dashboard onNavigate={onNavigate} /> : <LoginForm onNavigate={onNavigate} />;
 }

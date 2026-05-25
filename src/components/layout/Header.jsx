@@ -36,9 +36,14 @@ export default function Header({ currentPage, onNavigate }) {
         </nav>
 
         {isAdmin ? (
-          <button className="login-btn admin-active" onClick={logout}>
-            👤 Cerrar sesión
-          </button>
+          <>
+            <button className="login-btn admin-active" onClick={() => onNavigate('adminpanel')}>
+              ⚙️ Admin
+            </button>
+            <button className="login-btn" onClick={logout}>
+              Salir
+            </button>
+          </>
         ) : (
           <button className="login-btn" onClick={() => onNavigate('admin')}>
             👤 Login
