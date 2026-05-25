@@ -1,8 +1,10 @@
 import React from 'react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Header({ currentPage, onNavigate }) {
   const { count } = useCart();
+  const { isAdmin, logout } = useAuth();
 
   return (
     <header className="header">
@@ -32,6 +34,16 @@ export default function Header({ currentPage, onNavigate }) {
             Nosotros
           </button>
         </nav>
+
+        {isAdmin ? (
+          <button className="login-btn admin-active" onClick={logout}>
+            👤 Cerrar sesión
+          </button>
+        ) : (
+          <button className="login-btn" onClick={() => onNavigate('admin')}>
+            👤 Login
+          </button>
+        )}
 
         <button className="cart-btn" onClick={() => onNavigate('cart')}>
           <span className="cart-icon">🛒</span>

@@ -41,6 +41,16 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 .nav-link:hover { color: white; background: rgba(255,255,255,0.1); }
 .nav-link.active { color: var(--primary); background: rgba(255, 107, 53, 0.1); }
+.login-btn {
+  padding: 10px 18px; border-radius: var(--radius-full);
+  border: 2px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.85);
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; background: none;
+  transition: var(--transition); display: flex; align-items: center; gap: 6px;
+}
+.login-btn:hover { border-color: white; color: white; }
+.login-btn.admin-active { border-color: var(--primary); color: var(--primary); }
+.login-btn.admin-active:hover { background: rgba(255,107,53,0.1); }
+
 .cart-btn {
   position: relative; padding: 10px 18px;
   background: var(--primary); color: white;
