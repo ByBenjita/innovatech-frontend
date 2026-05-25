@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-
+// Para desarrollo local, se puede usar http://localhost:3001
+const API_URL = '';
+  
 function App() {
   const [productos, setProductos] = useState([]);
   const [status, setStatus] = useState('');
