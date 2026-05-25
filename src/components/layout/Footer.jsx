@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Footer() {
+export default function Footer({ onNavigate }) {
   return (
     <footer className="footer">
       <div className="footer-inner">
@@ -25,6 +25,7 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <p>© 2025 SaborExpress · Desplegado en AWS con Docker</p>
+        <button className="footer-admin-link" onClick={() => onNavigate('admin')}>⚙️ Admin</button>
       </div>
     </footer>
   );

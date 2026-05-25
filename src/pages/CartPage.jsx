@@ -1,19 +1,46 @@
 import React, { useState } from 'react';
 import CartItem from '../components/cart/CartItem';
 import { useCart } from '../context/CartContext';
+import { apiCrearOrden } from '../services/api';
 
 export default function CartPage({ onNavigate }) {
   const { items, total, clearCart } = useCart();
-  const [ordered, setOrdered] = useState(false);
+  const [ordered, setOrdered]   = useState(false);
+  const [ordenId, setOrdenId]   = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState('');
+
+  const delivery          = 1490;
+  const totalConDelivery  = total + delivery;
+
+  const handleOrder = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const apiItems = items.map(i => ({ id: i.id, nombre: i.nombre, precio: i.precio, qty: i.qty }));
+      const data = await apiCrearOrden(apiItems, totalConDelivery);
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setOrdenId(data.id);
+        clearCart();
+        setOrdered(true);
+      }
+    } catch {
+      setError('No se pudo conectar con el servidor. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (ordered) {
     return (
       <div className="cart-page">
         <div className="order-success">
           <span className="success-icon">✅</span>
-          <h2>¡Pedido recibido!</h2>
+          <h2>¡Pedido #{ordenId} confirmado!</h2>
           <p>Tu pedido está en preparación. Llegará en aproximadamente 30 minutos.</p>
-          <button className="btn-primary" onClick={() => { clearCart(); onNavigate('home'); }}>
+          <button className="btn-primary" onClick={() => onNavigate('home')}>
             Volver al inicio
           </button>
         </div>
@@ -35,9 +62,6 @@ export default function CartPage({ onNavigate }) {
       </div>
     );
   }
-
-  const delivery = 1490;
-  const totalConDelivery = total + delivery;
 
   return (
     <div className="cart-page">
@@ -74,8 +98,13 @@ export default function CartPage({ onNavigate }) {
             <span>Total</span>
             <span>${Number(totalConDelivery).toLocaleString('es-CL')}</span>
           </div>
-          <button className="btn-primary btn-full" onClick={() => setOrdered(true)}>
-            🚀 Realizar pedido
+          {error && <p className="cart-error">⚠️ {error}</p>}
+          <button
+            className="btn-primary btn-full"
+            onClick={handleOrder}
+            disabled={loading}
+          >
+            {loading ? '⏳ Procesando...' : '🚀 Realizar pedido'}
           </button>
           <button className="btn-ghost btn-full" onClick={clearCart}>
             Vaciar carrito
