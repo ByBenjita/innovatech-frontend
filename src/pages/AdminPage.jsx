@@ -5,6 +5,29 @@ import {
   apiAdminUpdateProducto, apiAdminDeleteProducto, apiAdminGetOrdenes,
 } from '../services/api';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { crashed: false, msg: '' }; }
+  static getDerivedStateFromError(err) { return { crashed: true, msg: err.message }; }
+  render() {
+    if (this.state.crashed) {
+      return (
+        <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+          <p style={{ fontSize: '3rem' }}>⚠️</p>
+          <h2 style={{ marginBottom: '12px' }}>Error en el panel admin</h2>
+          <p style={{ color: '#888', marginBottom: '24px' }}>{this.state.msg}</p>
+          <button
+            onClick={() => this.setState({ crashed: false })}
+            style={{ background: '#FF6B35', color: 'white', padding: '12px 28px', borderRadius: '50px', border: 'none', cursor: 'pointer', fontWeight: 700 }}
+          >
+            Reintentar
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const CATEGORIAS = ['hamburguesas', 'pizzas', 'ensaladas', 'bebidas', 'postres'];
 const EMPTY_FORM  = { nombre: '', precio: '', descripcion: '', categoria: 'hamburguesas', stock: '100' };
 
@@ -23,7 +46,7 @@ function LoginForm({ onNavigate }) {
       const data = await apiLogin(form.username, form.password);
       if (data.token) {
         login(data.token);
-        onNavigate('adminpanel');
+        onNavigate('home');
       } else {
         setError(data.error || 'Credenciales inválidas');
       }
@@ -98,15 +121,19 @@ function Dashboard({ onNavigate }) {
   const handleSave = async (e) => {
     e.preventDefault();
     const data = { ...form, precio: Number(form.precio), stock: Number(form.stock) };
-    if (editId) {
-      await apiAdminUpdateProducto(editId, data);
-      flash('✅ Producto actualizado');
-    } else {
-      await apiAdminAddProducto(data);
-      flash('✅ Producto agregado');
+    try {
+      if (editId) {
+        await apiAdminUpdateProducto(editId, data);
+        flash('✅ Producto actualizado');
+      } else {
+        await apiAdminAddProducto(data);
+        flash('✅ Producto agregado');
+      }
+      cancelEdit();
+      loadProductos();
+    } catch {
+      flash('⚠️ Error al guardar, intenta de nuevo');
     }
-    cancelEdit();
-    loadProductos();
   };
 
   const handleDelete = async (id, nombre) => {
@@ -274,5 +301,9 @@ function Dashboard({ onNavigate }) {
 // ── Export ────────────────────────────────────────────────────────────────────
 export default function AdminPage({ onNavigate }) {
   const { isAdmin } = useAuth();
-  return isAdmin ? <Dashboard onNavigate={onNavigate} /> : <LoginForm onNavigate={onNavigate} />;
+  return (
+    <ErrorBoundary>
+      {isAdmin ? <Dashboard onNavigate={onNavigate} /> : <LoginForm onNavigate={onNavigate} />}
+    </ErrorBoundary>
+  );
 }

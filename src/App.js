@@ -17,8 +17,7 @@ export default function App() {
     switch (page) {
       case 'menu':  return <Menu onNavigate={setPage} />;
       case 'cart':  return <CartPage onNavigate={setPage} />;
-      case 'admin':      return <AdminPage onNavigate={setPage} />;
-      case 'adminpanel': return <AdminPage onNavigate={setPage} />;
+      case 'admin': return <AdminPage onNavigate={setPage} />;
       default:      return <Home onNavigate={setPage} />;
     }
   };
