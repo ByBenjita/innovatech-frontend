@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: bybenjita/innovatech-frontend:latest
+    container_name: innovatech_frontend
+    ports:
+      - "80:80"
+    environment:
+      - REACT_APP_API_URL=http://44.211.93.35:3001
+    networks:
+      - innovatech-network
+    restart: unless-stopped
+
+networks:
+  innovatech-network:
+    driver: bridge
