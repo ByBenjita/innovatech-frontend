@@ -273,6 +273,115 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
 }
 
 /* ===== RESPONSIVE ===== */
+/* ===== STOCK & AGOTADO ===== */
+.stock-info { font-size: 0.8rem; margin-bottom: 10px; font-weight: 600; }
+.stock-ok     { color: var(--success); }
+.stock-bajo   { color: #f59e0b; }
+.stock-agotado{ color: #ef4444; }
+.card-agotado { opacity: 0.7; }
+.agotado-overlay {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 1.1rem; letter-spacing: 1px;
+  border-radius: 0;
+}
+.btn-add.disabled { background: #ccc; cursor: not-allowed; }
+.btn-add.disabled:hover { transform: none; }
+.cart-error { color: #ef4444; font-size: 0.88rem; font-weight: 600; text-align: center; }
+
+/* ===== FOOTER ADMIN LINK ===== */
+.footer-admin-link {
+  background: none; border: none; color: rgba(255,255,255,0.25);
+  font-size: 0.78rem; cursor: pointer; margin-top: 4px;
+  transition: var(--transition);
+}
+.footer-admin-link:hover { color: rgba(255,255,255,0.6); }
+
+/* ===== ADMIN PAGE ===== */
+.admin-page { min-height: 100vh; background: #f1f5f9; }
+.admin-header {
+  background: var(--dark); color: white; padding: 24px 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+}
+.admin-header h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+.admin-header p  { color: rgba(255,255,255,0.6); font-size: 0.9rem; }
+.admin-header-actions { display: flex; gap: 12px; }
+
+.admin-flash {
+  background: #d1fae5; color: #065f46; padding: 12px 40px;
+  font-weight: 600; font-size: 0.9rem; border-bottom: 1px solid #a7f3d0;
+}
+
+.admin-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); background: white; padding: 0 40px; }
+.admin-tab {
+  padding: 14px 24px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted);
+  border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; transition: var(--transition);
+}
+.admin-tab:hover  { color: var(--text); }
+.admin-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.admin-body { padding: 32px 40px; display: flex; flex-direction: column; gap: 28px; }
+.admin-card { background: white; border-radius: var(--radius-md); padding: 28px; box-shadow: var(--shadow-sm); }
+.admin-card h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; }
+
+.admin-form { display: flex; flex-direction: column; gap: 16px; }
+.admin-form-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+.admin-field { display: flex; flex-direction: column; gap: 6px; }
+.admin-field-wide { grid-column: span 2; }
+.admin-field label { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.admin-input {
+  padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 0.95rem; font-family: inherit; background: var(--bg);
+  transition: var(--transition); width: 100%;
+}
+.admin-input:focus { outline: none; border-color: var(--primary); background: white; }
+.admin-form-actions { display: flex; gap: 12px; padding-top: 4px; }
+
+.admin-table-wrap { overflow-x: auto; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th { text-align: left; padding: 10px 14px; border-bottom: 2px solid var(--border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.admin-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.admin-table tr:last-child td { border-bottom: none; }
+.admin-table tr:hover td { background: #fafafa; }
+.row-agotado td { color: #ef4444; }
+
+.admin-actions { display: flex; gap: 8px; }
+.action-btn { padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; cursor: pointer; border: none; transition: var(--transition); }
+.action-btn.edit   { background: #eff6ff; color: #1d4ed8; }
+.action-btn.edit:hover   { background: #dbeafe; }
+.action-btn.delete { background: #fef2f2; color: #dc2626; }
+.action-btn.delete:hover { background: #fee2e2; }
+
+.tag { display: inline-block; padding: 3px 10px; border-radius: var(--radius-full); background: #f1f5f9; color: var(--text-muted); font-size: 0.78rem; font-weight: 600; text-transform: capitalize; }
+.tag-green { background: #d1fae5; color: #065f46; }
+
+.stock-badge { display: inline-block; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.82rem; font-weight: 700; }
+.stock-badge.ok      { background: #d1fae5; color: #065f46; }
+.stock-badge.bajo    { background: #fef3c7; color: #92400e; }
+.stock-badge.agotado { background: #fee2e2; color: #991b1b; }
+
+.order-items-list { list-style: none; padding: 0; font-size: 0.85rem; }
+.order-items-list li { margin-bottom: 3px; }
+.order-items-list em { color: var(--text-muted); }
+
+/* ===== ADMIN LOGIN ===== */
+.admin-login-wrap {
+  min-height: calc(100vh - var(--header-height));
+  display: flex; align-items: center; justify-content: center;
+  background: #f1f5f9; padding: 24px;
+}
+.admin-login-card {
+  background: white; border-radius: var(--radius-lg); padding: 48px 40px;
+  box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; text-align: center;
+}
+.admin-login-icon { font-size: 3rem; margin-bottom: 16px; }
+.admin-login-card h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; }
+.admin-login-card > p { color: var(--text-muted); margin-bottom: 28px; }
+.admin-login-form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.admin-error { color: #dc2626; font-size: 0.88rem; font-weight: 600; text-align: center; }
+
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .hero { flex-direction: column; text-align: center; padding: 60px 24px; gap: 32px; }
   .hero-title { font-size: 2.2rem; }
@@ -286,4 +395,8 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   .banner { flex-direction: column; text-align: center; padding: 32px 24px; }
   .categories-section, .featured-section, .banner-section { padding: 40px 24px; }
   .product-list-section { padding: 32px 24px; }
+  .admin-header { padding: 20px 24px; }
+  .admin-body { padding: 20px 24px; }
+  .admin-tabs { padding: 0 24px; }
+  .admin-field-wide { grid-column: span 1; }
 }
