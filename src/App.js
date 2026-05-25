@@ -1,68 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { CartProvider } from './context/CartContext';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+import Home from './pages/Home';
+import Menu from './pages/Menu';
+import CartPage from './pages/CartPage';
+import './styles/variables.css';
 import './App.css';
 
-// Para desarrollo local, se puede usar http://localhost:3001
-const API_URL = '';
-  
-function App() {
-  const [productos, setProductos] = useState([]);
-  const [status, setStatus] = useState('');
-  const [form, setForm] = useState({ nombre: '', precio: '', descripcion: '' });
+export default function App() {
+  const [page, setPage] = useState('home');
 
-  useEffect(() => {
-    fetch(`${API_URL}/api/health`)
-      .then(res => res.json())
-      .then(data => setStatus(data.message))
-      .catch(() => setStatus('Backend no disponible'));
-
-    fetch(`${API_URL}/api/productos`)
-      .then(res => res.json())
-      .then(data => setProductos(data))
-      .catch(err => console.error(err));
-  }, []);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetch(`${API_URL}/api/productos`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
-      .then(res => res.json())
-      .then(data => {
-        setProductos([...productos, data]);
-        setForm({ nombre: '', precio: '', descripcion: '' });
-      });
+  const renderPage = () => {
+    switch (page) {
+      case 'menu':  return <Menu onNavigate={setPage} />;
+      case 'cart':  return <CartPage onNavigate={setPage} />;
+      default:      return <Home onNavigate={setPage} />;
+    }
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>🚀 Innovatech Chile</h1>
-        <p>Estado Backend: {status}</p>
-      </header>
-      <main>
-        <h2>Productos</h2>
-        <form onSubmit={handleSubmit}>
-          <input placeholder="Nombre" value={form.nombre}
-            onChange={e => setForm({...form, nombre: e.target.value})} required />
-          <input placeholder="Precio" type="number" value={form.precio}
-            onChange={e => setForm({...form, precio: e.target.value})} required />
-          <input placeholder="Descripción" value={form.descripcion}
-            onChange={e => setForm({...form, descripcion: e.target.value})} />
-          <button type="submit">Agregar Producto</button>
-        </form>
-        <ul>
-          {productos.map(p => (
-            <li key={p.id}>
-              <strong>{p.nombre}</strong> - ${p.precio} <br/>
-              <small>{p.descripcion}</small>
-            </li>
-          ))}
-        </ul>
-      </main>
-    </div>
+    <CartProvider>
+      <div className="app">
+        <Header currentPage={page} onNavigate={setPage} />
+        <main className="main-content">
+          {renderPage()}
+        </main>
+        <Footer />
+      </div>
+    </CartProvider>
   );
 }
-
-export default App;
