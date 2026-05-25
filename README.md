@@ -1,71 +1,92 @@
-# Getting Started with Create React App
+# Innovatech Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Frontend de la aplicacion Innovatech Chile, desarrollado con React y servido mediante nginx. Desplegado en AWS EC2 mediante contenedores Docker con pipeline CI/CD en GitHub Actions.
 
-## Available Scripts
+## Tecnologias utilizadas
 
-In the project directory, you can run:
+- React 18
+- nginx (servidor web y proxy inverso)
+- Docker y Docker Compose
+- GitHub Actions (CI/CD)
+- Amazon EC2
 
-### `npm start`
+## Arquitectura
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+La aplicacion se despliega en 3 instancias EC2 separadas dentro de la misma VPC:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Innovatech_Frontend - Contenedor React/nginx (accesible desde Internet)
+- Innovatech_Backend - Contenedor Node.js/Express (subred privada)
+- Innovatech_BD - Contenedor MySQL (subred privada)
 
-### `npm test`
+La comunicacion entre instancias se realiza mediante IPs privadas de la VPC. Solo el Frontend es accesible desde Internet.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Estructura del proyecto
 
-### `npm run build`
+## Dockerfile
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Se utiliza un Dockerfile multi-stage para optimizar el tamano de la imagen final:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- Stage 1 (builder): instala dependencias y construye el build de produccion de React
+- Stage 2 (production): copia el build dentro de una imagen nginx limpia, crea usuario no root
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## nginx.conf
 
-### `npm run eject`
+nginx cumple dos funciones:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Servir los archivos estaticos del build de React
+- Actuar como proxy inverso para las llamadas a /api, redirigiendo al Backend mediante IP privada de la VPC
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Docker Compose
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+El archivo docker-compose.yml levanta el servicio frontend exponiendo el puerto 80.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Pipeline CI/CD
 
-## Learn More
+El pipeline se activa automaticamente con cada push a la rama deploy y ejecuta los siguientes pasos:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Checkout del codigo
+2. Login a Docker Hub
+3. Build y push de la imagen a Docker Hub
+4. Deploy automatico en la instancia EC2 via SSH
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Secrets configurados en GitHub Actions:
+- DOCKERHUB_USERNAME
+- DOCKERHUB_TOKEN
+- EC2_FRONTEND_HOST
+- EC2_SSH_KEY
 
-### Code Splitting
+## Como ejecutar localmente
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Clonar el repositorio
+```bash
+git clone https://github.com/ByBenjita/innovatech-frontend.git
+cd innovatech-frontend
+```
 
-### Analyzing the Bundle Size
+2. Levantar el contenedor
+```bash
+docker-compose up -d
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+3. Abrir en el navegador
+http://localhost
 
-### Making a Progressive Web App
+## Como ejecutar en EC2
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+1. Conectarse a la instancia via EC2 Instance Connect
+2. Crear el archivo docker-compose.yml
+3. Ejecutar:
+```bash
+docker-compose up -d
+```
 
-### Advanced Configuration
+## Principios DevOps aplicados
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# deploy test
+- Contenedorizacion con Docker para garantizar consistencia entre entornos
+- Build multi-stage para reducir el tamano de la imagen final
+- nginx como proxy inverso para comunicacion segura con el Backend
+- Pipeline CI/CD automatizado con GitHub Actions
+- Gestion de secrets para credenciales sensibles
+- Control de versiones con Git y ramas especificas por ambiente
+- Usuario no root en contenedores para seguridad
+- Solo el Frontend es accesible desde Internet, el Backend y BD estan en subred privada
