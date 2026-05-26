@@ -1,20 +1,8 @@
 import React from 'react';
 import { useCart } from '../../context/CartContext';
 
-const CATEGORY_EMOJI = {
-  hamburguesas: '🍔',
-  pizzas: '🍕',
-  ensaladas: '🥗',
-  bebidas: '🥤',
-  postres: '🍰',
-  pollos: '🍗',
-  pastas: '🍝',
-  mariscos: '🦞',
-};
-
 export default function ProductCard({ product }) {
   const { addItem, items } = useCart();
-  const emoji   = CATEGORY_EMOJI[product.categoria] || '🍽️';
   const inCart  = items.find(i => i.id === product.id);
   const agotado = product.stock !== undefined && product.stock <= 0;
   const stockBajo = product.stock > 0 && product.stock <= 5;
@@ -23,9 +11,9 @@ export default function ProductCard({ product }) {
     <div className={`product-card${agotado ? ' card-agotado' : ''}`}>
       <div className="product-img">
         {product.imagen
-          ? <img className="product-real-img" src={product.imagen} alt={product.nombre} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
-          : null}
-        <span className="product-emoji" style={product.imagen ? { display: 'none' } : {}}>{emoji}</span>
+          ? <img className="product-real-img" src={product.imagen} alt={product.nombre} onError={e => { e.target.style.display = 'none'; }} />
+          : <span className="product-img-placeholder">{product.categoria || 'producto'}</span>
+        }
         {product.categoria && (
           <span className="product-category-tag">{product.categoria}</span>
         )}
@@ -38,10 +26,10 @@ export default function ProductCard({ product }) {
         {product.stock !== undefined && (
           <p className={`stock-info ${agotado ? 'stock-agotado' : stockBajo ? 'stock-bajo' : 'stock-ok'}`}>
             {agotado
-              ? '❌ Sin stock'
+              ? 'Sin stock'
               : stockBajo
-              ? `⚠️ Últimas ${product.stock} unidades`
-              : `✅ Disponible (${product.stock})`}
+              ? `Ultimas ${product.stock} unidades`
+              : `Disponible (${product.stock})`}
           </p>
         )}
 
@@ -54,7 +42,7 @@ export default function ProductCard({ product }) {
             onClick={() => !agotado && addItem(product)}
             disabled={agotado}
           >
-            {agotado ? 'Agotado' : inCart ? `✓ (${inCart.qty})` : '+ Agregar'}
+            {agotado ? 'Agotado' : inCart ? `En carrito (${inCart.qty})` : 'Agregar'}
           </button>
         </div>
       </div>

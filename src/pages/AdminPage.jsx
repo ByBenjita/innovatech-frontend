@@ -13,7 +13,6 @@ class ErrorBoundary extends React.Component {
     if (this.state.crashed) {
       return (
         <div style={{ textAlign: 'center', padding: '80px 24px' }}>
-          <p style={{ fontSize: '3rem' }}>⚠️</p>
           <h2 style={{ marginBottom: '12px' }}>Error en el panel admin</h2>
           <p style={{ color: '#888', marginBottom: '24px' }}>{this.state.msg}</p>
           <button
@@ -30,13 +29,12 @@ class ErrorBoundary extends React.Component {
 }
 
 const CATEGORIAS = ['hamburguesas', 'pizzas', 'ensaladas', 'bebidas', 'postres'];
-const EMPTY_FORM  = { nombre: '', precio: '', descripcion: '', categoria: 'hamburguesas', stock: '100', imagen: '' };
+const EMPTY_FORM = { nombre: '', precio: '', descripcion: '', categoria: 'hamburguesas', stock: '100', imagen: '' };
 
-// ── Login ────────────────────────────────────────────────────────────────────
 function LoginForm({ onNavigate }) {
   const { login } = useAuth();
-  const [form, setForm]   = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm]     = useState({ username: '', password: '' });
+  const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -49,7 +47,7 @@ function LoginForm({ onNavigate }) {
         login(data.token);
         onNavigate('home');
       } else {
-        setError(data.error || 'Credenciales inválidas');
+        setError(data.error || 'Credenciales invalidas');
       }
     } catch {
       setError('No se pudo conectar con el servidor');
@@ -61,8 +59,7 @@ function LoginForm({ onNavigate }) {
   return (
     <div className="admin-login-wrap">
       <div className="admin-login-card">
-        <div className="admin-login-icon">🔐</div>
-        <h2>Panel de Administración</h2>
+        <h2>Panel de Administracion</h2>
         <p>Ingresa tus credenciales de acceso</p>
         <form onSubmit={handleSubmit} className="admin-login-form">
           <input
@@ -75,7 +72,7 @@ function LoginForm({ onNavigate }) {
           <input
             className="admin-input"
             type="password"
-            placeholder="Contraseña"
+            placeholder="Contrasena"
             value={form.password}
             onChange={e => setForm({ ...form, password: e.target.value })}
             required
@@ -90,20 +87,15 @@ function LoginForm({ onNavigate }) {
   );
 }
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
-function StatCard({ icon, label, value, color }) {
+function StatCard({ label, value, color }) {
   return (
     <div className="stat-card" style={{ borderTopColor: color }}>
-      <div className="stat-icon" style={{ background: color + '20' }}>{icon}</div>
-      <div>
-        <div className="stat-value" style={{ color }}>{value}</div>
-        <div className="stat-label">{label}</div>
-      </div>
+      <div className="stat-value" style={{ color }}>{value}</div>
+      <div className="stat-label">{label}</div>
     </div>
   );
 }
 
-// ── Dashboard ────────────────────────────────────────────────────────────────
 function Dashboard({ onNavigate }) {
   const { logout } = useAuth();
   const [tab, setTab]             = useState('productos');
@@ -120,7 +112,9 @@ function Dashboard({ onNavigate }) {
     apiAdminGetOrdenes().then(setOrdenes).catch(() => {});
   }, []);
 
-  useEffect(() => { if (tab === 'ordenes') apiAdminGetOrdenes().then(setOrdenes).catch(() => {}); }, [tab]);
+  useEffect(() => {
+    if (tab === 'ordenes') apiAdminGetOrdenes().then(setOrdenes).catch(() => {});
+  }, [tab]);
 
   const loadProductos = () => apiGetProductos().then(setProductos).catch(() => {});
 
@@ -141,8 +135,13 @@ function Dashboard({ onNavigate }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
-try {
-      const data = { ...form, precio: Number(form.precio), stock: Number(form.stock), imagen: form.imagen || null };
+    try {
+      const data = {
+        ...form,
+        precio: Number(form.precio),
+        stock:  Number(form.stock),
+        imagen: form.imagen || null,
+      };
       if (editId) {
         await apiAdminUpdateProducto(editId, data);
         flash('Producto actualizado');
@@ -158,13 +157,13 @@ try {
   };
 
   const handleDelete = async (id, nombre) => {
-    if (!window.confirm(`¿Eliminar "${nombre}"?`)) return;
+    if (!window.confirm(`Eliminar "${nombre}"?`)) return;
     try {
       await apiAdminDeleteProducto(id);
-      flash('🗑️ Producto eliminado');
+      flash('Producto eliminado');
       loadProductos();
     } catch {
-      flash('❌ Error al eliminar');
+      flash('Error al eliminar');
     }
   };
 
@@ -173,7 +172,7 @@ try {
       await apiAdminUpdateStock(id, delta);
       loadProductos();
     } catch {
-      flash('❌ Error al actualizar stock');
+      flash('Error al actualizar stock');
     }
   };
 
@@ -181,43 +180,38 @@ try {
 
   return (
     <div className="admin-page">
-      {/* Header */}
       <div className="admin-header">
         <div>
-          <h1>⚙️ Panel de Administración</h1>
-          <p>SaborExpress — gestión de inventario y pedidos</p>
+          <h1>Panel de Administracion</h1>
+          <p>SaborExpress — gestion de inventario y pedidos</p>
         </div>
         <div className="admin-header-actions">
-          <button className="btn-ghost" onClick={() => onNavigate('home')}>← Ir a la tienda</button>
-          <button className="btn-ghost" onClick={logout}>Cerrar sesión</button>
+          <button className="btn-ghost" onClick={() => onNavigate('home')}>Ir a la tienda</button>
+          <button className="btn-ghost" onClick={logout}>Cerrar sesion</button>
         </div>
       </div>
 
       {msg && <div className="admin-flash">{msg}</div>}
 
-      {/* Stats */}
       <div className="admin-stats">
-        <StatCard icon="🍽️" label="Productos totales"    value={productos.length} color="#6366f1" />
-        <StatCard icon="⚠️" label="Stock crítico (≤5)"   value={stockCritico}     color={stockCritico > 0 ? '#f59e0b' : '#10b981'} />
-        <StatCard icon="📋" label="Pedidos registrados"  value={ordenes.length}   color="#3b82f6" />
+        <StatCard label="Productos totales"  value={productos.length} color="#6366f1" />
+        <StatCard label="Stock critico (5 o menos)" value={stockCritico} color={stockCritico > 0 ? '#f59e0b' : '#10b981'} />
+        <StatCard label="Pedidos registrados" value={ordenes.length}  color="#3b82f6" />
       </div>
 
-      {/* Tabs */}
       <div className="admin-tabs">
         <button className={`admin-tab${tab === 'productos' ? ' active' : ''}`} onClick={() => setTab('productos')}>
-          🍔 Productos ({productos.length})
+          Productos ({productos.length})
         </button>
         <button className={`admin-tab${tab === 'ordenes' ? ' active' : ''}`} onClick={() => setTab('ordenes')}>
-          📋 Órdenes ({ordenes.length})
+          Ordenes ({ordenes.length})
         </button>
       </div>
 
-      {/* ── TAB PRODUCTOS ── */}
       {tab === 'productos' && (
         <div className="admin-body">
-          {/* Formulario */}
           <div className="admin-card">
-            <h2>{editId ? '✏️ Editar producto' : '➕ Nuevo producto'}</h2>
+            <h2>{editId ? 'Editar producto' : 'Nuevo producto'}</h2>
             <div className="admin-form-layout">
               <form className="admin-form" onSubmit={handleSave}>
                 <div className="admin-form-row">
@@ -236,13 +230,13 @@ try {
                 </div>
                 <div className="admin-form-row">
                   <div className="admin-field">
-                    <label>Categoría</label>
+                    <label>Categoria</label>
                     <select className="admin-input" value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })}>
                       {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="admin-field admin-field-wide">
-                    <label>Descripción</label>
+                    <label>Descripcion</label>
                     <input className="admin-input" value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} />
                   </div>
                 </div>
@@ -265,23 +259,16 @@ try {
               {form.imagen ? (
                 <div className="img-preview-wrap">
                   <p className="img-preview-label">Vista previa</p>
-                  <img
-                    className="img-preview"
-                    src={form.imagen}
-                    alt="preview"
-                    onError={e => { e.target.style.display = 'none'; }}
-                  />
+                  <img className="img-preview" src={form.imagen} alt="preview" onError={e => { e.target.style.display = 'none'; }} />
                 </div>
               ) : (
                 <div className="img-preview-wrap img-preview-empty">
-                  <span>🖼️</span>
                   <p>Pega una URL de imagen para ver la vista previa</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Tabla */}
           <div className="admin-card">
             <h2>Inventario de productos</h2>
             <div className="admin-table-wrap">
@@ -291,7 +278,7 @@ try {
                     <th>Foto</th>
                     <th>ID</th>
                     <th>Nombre</th>
-                    <th>Categoría</th>
+                    <th>Categoria</th>
                     <th>Precio</th>
                     <th>Stock</th>
                     <th>Acciones</th>
@@ -303,7 +290,7 @@ try {
                       <td>
                         {p.imagen
                           ? <img className="table-thumb" src={p.imagen} alt={p.nombre} onError={e => { e.target.style.display = 'none'; }} />
-                          : <span className="table-thumb-placeholder">🍽️</span>}
+                          : <span className="table-thumb-placeholder">—</span>}
                       </td>
                       <td>#{p.id}</td>
                       <td>
@@ -321,7 +308,7 @@ try {
                             title="Quitar 1"
                           >−</button>
                           <span className={`stock-badge ${p.stock === 0 ? 'agotado' : p.stock <= 5 ? 'bajo' : 'ok'}`}>
-                            {p.stock === 0 ? 'Agotado' : p.stock <= 5 ? `⚠️ ${p.stock}` : p.stock}
+                            {p.stock === 0 ? 'Agotado' : p.stock}
                           </span>
                           <button
                             className="stock-btn plus"
@@ -331,8 +318,8 @@ try {
                         </div>
                       </td>
                       <td className="admin-actions">
-                        <button className="action-btn edit" onClick={() => startEdit(p)}>✏️ Editar</button>
-                        <button className="action-btn delete" onClick={() => handleDelete(p.id, p.nombre)}>🗑️</button>
+                        <button className="action-btn edit" onClick={() => startEdit(p)}>Editar</button>
+                        <button className="action-btn delete" onClick={() => handleDelete(p.id, p.nombre)}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -343,13 +330,12 @@ try {
         </div>
       )}
 
-      {/* ── TAB ÓRDENES ── */}
       {tab === 'ordenes' && (
         <div className="admin-body">
           <div className="admin-card">
             <h2>Historial de pedidos</h2>
             {ordenes.length === 0 ? (
-              <p className="empty-state">Aún no hay pedidos registrados.</p>
+              <p className="empty-state">Aun no hay pedidos registrados.</p>
             ) : (
               <div className="admin-table-wrap">
                 <table className="admin-table">
@@ -372,7 +358,7 @@ try {
                           <td>
                             <ul className="order-items-list">
                               {items.map((it, i) => (
-                                <li key={i}>{it.cantidad}× {it.nombre} <em>(${Number(it.precio).toLocaleString('es-CL')})</em></li>
+                                <li key={i}>{it.cantidad}x {it.nombre} <em>(${Number(it.precio).toLocaleString('es-CL')})</em></li>
                               ))}
                             </ul>
                           </td>
@@ -392,7 +378,6 @@ try {
   );
 }
 
-// ── Export ────────────────────────────────────────────────────────────────────
 export default function AdminPage({ onNavigate }) {
   const { isAdmin } = useAuth();
   return (
