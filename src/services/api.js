@@ -49,6 +49,13 @@ export const apiAdminDeleteProducto = (id) =>
     headers: authHeader(),
   }).then(r => r.json());
 
+export const apiAdminUpdateStock = (id, delta) =>
+  fetch(`${BASE}/api/productos/${id}/stock`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeader() },
+    body: JSON.stringify({ delta }),
+  }).then(r => r.json());
+
 // ── Admin: órdenes ────────────────────────────────────────────────────────────
 export const apiAdminGetOrdenes = () =>
   fetch(`${BASE}/api/ordenes`, { headers: authHeader() }).then(r => r.json());
