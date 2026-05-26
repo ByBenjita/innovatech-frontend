@@ -23,7 +23,7 @@ function LoginForm({ onNavigate }) {
       const data = await apiLogin(form.username, form.password);
       if (data.token) {
         login(data.token);
-        onNavigate('adminpanel');
+        onNavigate('home');
       } else {
         setError(data.error || 'Credenciales inválidas');
       }
