@@ -107,16 +107,18 @@ function Dashboard({ onNavigate }) {
 
   const flash = (text) => { setMsg(text); setTimeout(() => setMsg(''), 3000); };
 
+  const safeSet = (setter) => (data) => setter(Array.isArray(data) ? data : []);
+
   useEffect(() => {
-    apiGetProductos().then(setProductos).catch(() => {});
-    apiAdminGetOrdenes().then(setOrdenes).catch(() => {});
+    apiGetProductos().then(safeSet(setProductos)).catch(() => {});
+    apiAdminGetOrdenes().then(safeSet(setOrdenes)).catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (tab === 'ordenes') apiAdminGetOrdenes().then(setOrdenes).catch(() => {});
+    if (tab === 'ordenes') apiAdminGetOrdenes().then(safeSet(setOrdenes)).catch(() => {});
   }, [tab]);
 
-  const loadProductos = () => apiGetProductos().then(setProductos).catch(() => {});
+  const loadProductos = () => apiGetProductos().then(safeSet(setProductos)).catch(() => {});
 
   const startEdit = (p) => {
     setEditId(p.id);
