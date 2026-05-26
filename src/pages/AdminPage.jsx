@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   apiLogin, apiGetProductos, apiAdminAddProducto,
   apiAdminUpdateProducto, apiAdminDeleteProducto, apiAdminGetOrdenes,
+  apiAdminUpdateStock,
 } from '../services/api';
 
 class ErrorBoundary extends React.Component {
@@ -29,7 +30,7 @@ class ErrorBoundary extends React.Component {
 }
 
 const CATEGORIAS = ['hamburguesas', 'pizzas', 'ensaladas', 'bebidas', 'postres'];
-const EMPTY_FORM  = { nombre: '', precio: '', descripcion: '', categoria: 'hamburguesas', stock: '100' };
+const EMPTY_FORM  = { nombre: '', precio: '', descripcion: '', categoria: 'hamburguesas', stock: '100', imagen: '' };
 
 // ── Login ────────────────────────────────────────────────────────────────────
 function LoginForm({ onNavigate }) {
@@ -89,6 +90,19 @@ function LoginForm({ onNavigate }) {
   );
 }
 
+// ── Stat card ─────────────────────────────────────────────────────────────────
+function StatCard({ icon, label, value, color }) {
+  return (
+    <div className="stat-card" style={{ borderTopColor: color }}>
+      <div className="stat-icon" style={{ background: color + '20' }}>{icon}</div>
+      <div>
+        <div className="stat-value" style={{ color }}>{value}</div>
+        <div className="stat-label">{label}</div>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 function Dashboard({ onNavigate }) {
   const { logout } = useAuth();
@@ -101,18 +115,25 @@ function Dashboard({ onNavigate }) {
 
   const flash = (text) => { setMsg(text); setTimeout(() => setMsg(''), 3000); };
 
-  useEffect(() => { loadProductos(); }, []);
-  useEffect(() => { if (tab === 'ordenes') loadOrdenes(); }, [tab]);
-
-  const loadProductos = () =>
+  useEffect(() => {
     apiGetProductos().then(setProductos).catch(() => {});
-
-  const loadOrdenes = () =>
     apiAdminGetOrdenes().then(setOrdenes).catch(() => {});
+  }, []);
+
+  useEffect(() => { if (tab === 'ordenes') apiAdminGetOrdenes().then(setOrdenes).catch(() => {}); }, [tab]);
+
+  const loadProductos = () => apiGetProductos().then(setProductos).catch(() => {});
 
   const startEdit = (p) => {
     setEditId(p.id);
-    setForm({ nombre: p.nombre, precio: p.precio, descripcion: p.descripcion || '', categoria: p.categoria || 'hamburguesas', stock: p.stock });
+    setForm({
+      nombre:      p.nombre,
+      precio:      p.precio,
+      descripcion: p.descripcion || '',
+      categoria:   p.categoria || 'hamburguesas',
+      stock:       p.stock,
+      imagen:      p.imagen || '',
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -120,28 +141,43 @@ function Dashboard({ onNavigate }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const data = { ...form, precio: Number(form.precio), stock: Number(form.stock) };
-    try {
+try {
+      const data = { ...form, precio: Number(form.precio), stock: Number(form.stock), imagen: form.imagen || null };
       if (editId) {
         await apiAdminUpdateProducto(editId, data);
-        flash('✅ Producto actualizado');
+        flash('Producto actualizado');
       } else {
         await apiAdminAddProducto(data);
-        flash('✅ Producto agregado');
+        flash('Producto agregado');
       }
       cancelEdit();
       loadProductos();
     } catch {
-      flash('⚠️ Error al guardar, intenta de nuevo');
+      flash('Error al guardar');
     }
   };
 
   const handleDelete = async (id, nombre) => {
     if (!window.confirm(`¿Eliminar "${nombre}"?`)) return;
-    await apiAdminDeleteProducto(id);
-    flash('🗑️ Producto eliminado');
-    loadProductos();
+    try {
+      await apiAdminDeleteProducto(id);
+      flash('🗑️ Producto eliminado');
+      loadProductos();
+    } catch {
+      flash('❌ Error al eliminar');
+    }
   };
+
+  const handleStockChange = async (id, delta) => {
+    try {
+      await apiAdminUpdateStock(id, delta);
+      loadProductos();
+    } catch {
+      flash('❌ Error al actualizar stock');
+    }
+  };
+
+  const stockCritico = productos.filter(p => p.stock <= 5).length;
 
   return (
     <div className="admin-page">
@@ -159,13 +195,20 @@ function Dashboard({ onNavigate }) {
 
       {msg && <div className="admin-flash">{msg}</div>}
 
+      {/* Stats */}
+      <div className="admin-stats">
+        <StatCard icon="🍽️" label="Productos totales"    value={productos.length} color="#6366f1" />
+        <StatCard icon="⚠️" label="Stock crítico (≤5)"   value={stockCritico}     color={stockCritico > 0 ? '#f59e0b' : '#10b981'} />
+        <StatCard icon="📋" label="Pedidos registrados"  value={ordenes.length}   color="#3b82f6" />
+      </div>
+
       {/* Tabs */}
       <div className="admin-tabs">
         <button className={`admin-tab${tab === 'productos' ? ' active' : ''}`} onClick={() => setTab('productos')}>
           🍔 Productos ({productos.length})
         </button>
         <button className={`admin-tab${tab === 'ordenes' ? ' active' : ''}`} onClick={() => setTab('ordenes')}>
-          📋 Órdenes
+          📋 Órdenes ({ordenes.length})
         </button>
       </div>
 
@@ -175,38 +218,67 @@ function Dashboard({ onNavigate }) {
           {/* Formulario */}
           <div className="admin-card">
             <h2>{editId ? '✏️ Editar producto' : '➕ Nuevo producto'}</h2>
-            <form className="admin-form" onSubmit={handleSave}>
-              <div className="admin-form-row">
-                <div className="admin-field">
-                  <label>Nombre</label>
-                  <input className="admin-input" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} required />
+            <div className="admin-form-layout">
+              <form className="admin-form" onSubmit={handleSave}>
+                <div className="admin-form-row">
+                  <div className="admin-field">
+                    <label>Nombre</label>
+                    <input className="admin-input" value={form.nombre} onChange={e => setForm({ ...form, nombre: e.target.value })} required />
+                  </div>
+                  <div className="admin-field">
+                    <label>Precio (CLP)</label>
+                    <input className="admin-input" type="number" value={form.precio} onChange={e => setForm({ ...form, precio: e.target.value })} required min="0" />
+                  </div>
+                  <div className="admin-field">
+                    <label>Stock</label>
+                    <input className="admin-input" type="number" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required min="0" />
+                  </div>
+                </div>
+                <div className="admin-form-row">
+                  <div className="admin-field">
+                    <label>Categoría</label>
+                    <select className="admin-input" value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })}>
+                      {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="admin-field admin-field-wide">
+                    <label>Descripción</label>
+                    <input className="admin-input" value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} />
+                  </div>
                 </div>
                 <div className="admin-field">
-                  <label>Precio (CLP)</label>
-                  <input className="admin-input" type="number" value={form.precio} onChange={e => setForm({ ...form, precio: e.target.value })} required min="0" />
+                  <label>URL de imagen (opcional)</label>
+                  <input
+                    className="admin-input"
+                    type="url"
+                    placeholder="https://ejemplo.com/imagen.jpg"
+                    value={form.imagen}
+                    onChange={e => setForm({ ...form, imagen: e.target.value })}
+                  />
                 </div>
-                <div className="admin-field">
-                  <label>Stock</label>
-                  <input className="admin-input" type="number" value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} required min="0" />
+                <div className="admin-form-actions">
+                  <button className="btn-primary" type="submit">{editId ? 'Guardar cambios' : 'Agregar producto'}</button>
+                  {editId && <button className="btn-ghost" type="button" onClick={cancelEdit}>Cancelar</button>}
                 </div>
-              </div>
-              <div className="admin-form-row">
-                <div className="admin-field">
-                  <label>Categoría</label>
-                  <select className="admin-input" value={form.categoria} onChange={e => setForm({ ...form, categoria: e.target.value })}>
-                    {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+              </form>
+
+              {form.imagen ? (
+                <div className="img-preview-wrap">
+                  <p className="img-preview-label">Vista previa</p>
+                  <img
+                    className="img-preview"
+                    src={form.imagen}
+                    alt="preview"
+                    onError={e => { e.target.style.display = 'none'; }}
+                  />
                 </div>
-                <div className="admin-field admin-field-wide">
-                  <label>Descripción</label>
-                  <input className="admin-input" value={form.descripcion} onChange={e => setForm({ ...form, descripcion: e.target.value })} />
+              ) : (
+                <div className="img-preview-wrap img-preview-empty">
+                  <span>🖼️</span>
+                  <p>Pega una URL de imagen para ver la vista previa</p>
                 </div>
-              </div>
-              <div className="admin-form-actions">
-                <button className="btn-primary" type="submit">{editId ? 'Guardar cambios' : 'Agregar producto'}</button>
-                {editId && <button className="btn-ghost" type="button" onClick={cancelEdit}>Cancelar</button>}
-              </div>
-            </form>
+              )}
+            </div>
           </div>
 
           {/* Tabla */}
@@ -216,6 +288,7 @@ function Dashboard({ onNavigate }) {
               <table className="admin-table">
                 <thead>
                   <tr>
+                    <th>Foto</th>
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Categoría</th>
@@ -227,14 +300,35 @@ function Dashboard({ onNavigate }) {
                 <tbody>
                   {productos.map(p => (
                     <tr key={p.id} className={p.stock === 0 ? 'row-agotado' : ''}>
+                      <td>
+                        {p.imagen
+                          ? <img className="table-thumb" src={p.imagen} alt={p.nombre} onError={e => { e.target.style.display = 'none'; }} />
+                          : <span className="table-thumb-placeholder">🍽️</span>}
+                      </td>
                       <td>#{p.id}</td>
-                      <td><strong>{p.nombre}</strong></td>
+                      <td>
+                        <strong>{p.nombre}</strong>
+                        {p.descripcion && <p className="table-desc">{p.descripcion}</p>}
+                      </td>
                       <td><span className="tag">{p.categoria || '—'}</span></td>
                       <td>${Number(p.precio).toLocaleString('es-CL')}</td>
                       <td>
-                        <span className={`stock-badge ${p.stock === 0 ? 'agotado' : p.stock <= 5 ? 'bajo' : 'ok'}`}>
-                          {p.stock === 0 ? 'Agotado' : p.stock <= 5 ? `⚠️ ${p.stock}` : p.stock}
-                        </span>
+                        <div className="stock-controls">
+                          <button
+                            className="stock-btn minus"
+                            onClick={() => handleStockChange(p.id, -1)}
+                            disabled={p.stock <= 0}
+                            title="Quitar 1"
+                          >−</button>
+                          <span className={`stock-badge ${p.stock === 0 ? 'agotado' : p.stock <= 5 ? 'bajo' : 'ok'}`}>
+                            {p.stock === 0 ? 'Agotado' : p.stock <= 5 ? `⚠️ ${p.stock}` : p.stock}
+                          </span>
+                          <button
+                            className="stock-btn plus"
+                            onClick={() => handleStockChange(p.id, 1)}
+                            title="Agregar 1"
+                          >+</button>
+                        </div>
                       </td>
                       <td className="admin-actions">
                         <button className="action-btn edit" onClick={() => startEdit(p)}>✏️ Editar</button>

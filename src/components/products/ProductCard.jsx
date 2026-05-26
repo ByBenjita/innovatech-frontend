@@ -22,7 +22,10 @@ export default function ProductCard({ product }) {
   return (
     <div className={`product-card${agotado ? ' card-agotado' : ''}`}>
       <div className="product-img">
-        <span className="product-emoji">{emoji}</span>
+        {product.imagen
+          ? <img className="product-real-img" src={product.imagen} alt={product.nombre} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+          : null}
+        <span className="product-emoji" style={product.imagen ? { display: 'none' } : {}}>{emoji}</span>
         {product.categoria && (
           <span className="product-category-tag">{product.categoria}</span>
         )}
