@@ -1,92 +1,83 @@
 # Innovatech Frontend
 
-Frontend de la aplicacion Innovatech Chile, desarrollado con React y servido mediante nginx. Desplegado en AWS EC2 mediante contenedores Docker con pipeline CI/CD en GitHub Actions.
+Frontend de la aplicación Innovatech Chile (SaborExpress), desarrollado con React y servido mediante nginx. Orquestado en un clúster Amazon EKS con pipeline CI/CD en GitHub Actions (build → push a ECR → deploy en el clúster).
 
-## Tecnologias utilizadas
-
+## Tecnologías utilizadas
 - React 18
 - nginx (servidor web y proxy inverso)
-- Docker y Docker Compose
+- Docker (build multi-stage)
+- Amazon EKS (Kubernetes)
+- Amazon ECR (registro de imágenes)
 - GitHub Actions (CI/CD)
-- Amazon EC2
 
 ## Arquitectura
 
-La aplicacion se despliega en 3 instancias EC2 separadas dentro de la misma VPC:
+El proyecto evolucionó de un despliegue inicial en 3 instancias EC2 separadas (etapa de contenedorización) a una orquestación completa sobre Kubernetes:
 
-- Innovatech_Frontend - Contenedor React/nginx (accesible desde Internet)
-- Innovatech_Backend - Contenedor Node.js/Express (subred privada)
-- Innovatech_BD - Contenedor MySQL (subred privada)
-
-La comunicacion entre instancias se realiza mediante IPs privadas de la VPC. Solo el Frontend es accesible desde Internet.
-
-## Estructura del proyecto
+- Clúster **innovatech-eks** (Amazon EKS), 2 nodos t3.medium en us-east-1c y us-east-1d, dentro de una VPC unificada (10.1.0.0/16).
+- El Frontend corre como Deployment con 2 réplicas, expuesto públicamente mediante un Service (Network Load Balancer / NodePort según disponibilidad de subredes).
+- El Backend y la base de datos permanecen dentro del clúster, no accesibles desde Internet.
+- nginx actúa como proxy inverso: las llamadas a `/api` se redirigen al Service interno del backend vía DNS de Kubernetes (`backend-service:3001`), no mediante IP privada fija.
 
 ## Dockerfile
 
-Se utiliza un Dockerfile multi-stage para optimizar el tamano de la imagen final:
-
-- Stage 1 (builder): instala dependencias y construye el build de produccion de React
-- Stage 2 (production): copia el build dentro de una imagen nginx limpia, crea usuario no root
+Build multi-stage para optimizar el tamaño de la imagen final:
+- **Stage 1 (builder):** instala dependencias y genera el build de producción de React.
+- **Stage 2 (production):** copia el build dentro de una imagen `nginx:alpine`, crea usuario no root.
 
 ## nginx.conf
 
 nginx cumple dos funciones:
+- Servir los archivos estáticos del build de React.
+- Actuar como proxy inverso para las llamadas a `/api`, redirigiendo al Service interno del backend por DNS de Kubernetes.
 
-- Servir los archivos estaticos del build de React
-- Actuar como proxy inverso para las llamadas a /api, redirigiendo al Backend mediante IP privada de la VPC
+## Registro de imágenes
 
-## Docker Compose
+Las imágenes se publican en Amazon ECR, etiquetadas con el hash del commit:
 
-El archivo docker-compose.yml levanta el servicio frontend exponiendo el puerto 80.
+<account_id>.dkr.ecr.us-east-1.amazonaws.com/innovatech-frontend:<commit-sha>
 
 ## Pipeline CI/CD
 
-El pipeline se activa automaticamente con cada push a la rama deploy y ejecuta los siguientes pasos:
+El pipeline (rama `deploy-eks`) se activa con cada push y ejecuta:
 
-1. Checkout del codigo
-2. Login a Docker Hub
-3. Build y push de la imagen a Docker Hub
-4. Deploy automatico en la instancia EC2 via SSH
+1. Checkout del código
+2. Instalación de dependencias y ejecución de tests (`CI=true npm test -- --watchAll=false --passWithNoTests`)
+3. Configuración de credenciales AWS (STS)
+4. Build y push de la imagen Docker a Amazon ECR
+5. Deploy automático en el clúster EKS (`kubectl set image deployment/frontend-deployment ...`)
 
 Secrets configurados en GitHub Actions:
-- DOCKERHUB_USERNAME
-- DOCKERHUB_TOKEN
-- EC2_FRONTEND_HOST
-- EC2_SSH_KEY
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
+- `EKS_CLUSTER_NAME`
 
-## Como ejecutar localmente
+## Cómo ejecutar localmente (desarrollo)
 
-1. Clonar el repositorio
 ```bash
 git clone https://github.com/ByBenjita/innovatech-frontend.git
 cd innovatech-frontend
-```
-
-2. Levantar el contenedor
-```bash
 docker-compose up -d
 ```
 
-3. Abrir en el navegador
-http://localhost
+Abrir en el navegador: `http://localhost`
 
-## Como ejecutar en EC2
+## Cómo desplegar en EKS
 
-1. Conectarse a la instancia via EC2 Instance Connect
-2. Crear el archivo docker-compose.yml
-3. Ejecutar:
 ```bash
-docker-compose up -d
+kubectl apply -f k8s/frontend-deployment.yaml
+kubectl apply -f k8s/frontend-service.yaml
+kubectl rollout status deployment/frontend-deployment
 ```
 
 ## Principios DevOps aplicados
 
-- Contenedorizacion con Docker para garantizar consistencia entre entornos
-- Build multi-stage para reducir el tamano de la imagen final
-- nginx como proxy inverso para comunicacion segura con el Backend
-- Pipeline CI/CD automatizado con GitHub Actions
-- Gestion de secrets para credenciales sensibles
-- Control de versiones con Git y ramas especificas por ambiente
-- Usuario no root en contenedores para seguridad
-- Solo el Frontend es accesible desde Internet, el Backend y BD estan en subred privada
+- Contenedorización con Docker (multi-stage build) para consistencia entre entornos
+- nginx como proxy inverso hacia el backend vía DNS interno de Kubernetes
+- Orquestación productiva con Kubernetes (Amazon EKS)
+- Pipeline CI/CD automatizado con GitHub Actions, incluyendo etapa de test
+- Registro de imágenes versionado por commit en Amazon ECR
+- Usuario no root en contenedores por seguridad
+- Solo el Frontend es accesible desde Internet; Backend y BD permanecen dentro del clúster
+
